@@ -460,6 +460,8 @@
     <string name="customize_toggle_recent_searches" moz:removedIn="96" tools:ignore="UnusedResources">Recent searches</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+    <!-- Title for preference to open wallpapers -->
+    <string name="preferences_wallpapers">Wallpapers</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
