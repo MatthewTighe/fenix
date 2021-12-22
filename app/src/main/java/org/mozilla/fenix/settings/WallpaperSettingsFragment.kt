@@ -8,16 +8,25 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
-import androidx.compose.material.Switch
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -81,10 +90,11 @@ fun WallpaperSettings(
 fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
     onSelectionChanged: (Wallpaper) -> Unit,
-    selectedWallpaper: Wallpaper
+    selectedWallpaper: Wallpaper,
+    numColumns: Int = 3,
 ) {
     LazyVerticalGrid(
-        cells = GridCells.Fixed(3),
+        cells = GridCells.Fixed(numColumns),
         modifier = Modifier.padding(vertical = 30.dp, horizontal = 20.dp)
     ) {
         items(wallpapers) { wallpaper ->
@@ -101,7 +111,8 @@ fun WallpaperThumbnails(
 fun WallpaperThumbnailItem(
     wallpaper: Wallpaper,
     onSelectionChanged: (Wallpaper) -> Unit,
-    isCurrentlySelected: Boolean
+    isCurrentlySelected: Boolean,
+    aspectRatio: Float = 1.1f
 ) {
     val thumbnailShape = RoundedCornerShape(8.dp)
     val border = if (isCurrentlySelected) {
@@ -123,7 +134,7 @@ fun WallpaperThumbnailItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.1f)
+            .aspectRatio(aspectRatio)
             .padding(4.dp)
             .clip(thumbnailShape)
             .then(background)

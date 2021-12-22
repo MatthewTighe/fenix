@@ -31,7 +31,7 @@ class WallpaperManagerTest {
         val currentWallpaper = Wallpaper.NONE
         every { mockSettings.currentWallpaper } returns currentWallpaper.name
         val wallpaperSlot = slot<String>()
-        every { mockSettings.currentWallpaper = capture(wallpaperSlot)} just runs
+        every { mockSettings.currentWallpaper = capture(wallpaperSlot) } just runs
 
         val newWallpaper = Wallpaper.FIRST
         val manager = WallpaperManager(mockSettings)
@@ -47,7 +47,7 @@ class WallpaperManagerTest {
         val currentWallpaper = Wallpaper.values()[0]
         every { mockSettings.currentWallpaper } returns currentWallpaper.name
         val wallpaperSlot = slot<String>()
-        every { mockSettings.currentWallpaper = capture(wallpaperSlot)} just runs
+        every { mockSettings.currentWallpaper = capture(wallpaperSlot) } just runs
 
         val manager = WallpaperManager(mockSettings)
         manager.switchToNextWallpaper()
@@ -59,11 +59,11 @@ class WallpaperManagerTest {
     }
 
     @Test
-    fun `GIVEN current wallpaper is last WHEN wallpaper switched to next THEN first value is used`() = runBlockingTest{
+    fun `GIVEN current wallpaper is last WHEN wallpaper switched to next THEN first value is used`() = runBlockingTest {
         val currentWallpaper = Wallpaper.values().last()
         every { mockSettings.currentWallpaper } returns currentWallpaper.name
         val wallpaperSlot = slot<String>()
-        every { mockSettings.currentWallpaper = capture(wallpaperSlot)} just runs
+        every { mockSettings.currentWallpaper = capture(wallpaperSlot) } just runs
 
         val manager = WallpaperManager(mockSettings)
         manager.switchToNextWallpaper()
