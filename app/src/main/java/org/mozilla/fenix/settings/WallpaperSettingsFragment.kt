@@ -23,16 +23,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
-import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentWallpaperSettingsBinding
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.WallpaperManager
 
 class WallpaperSettingsFragment : Fragment() {
     private val binding by lazy {
         FragmentWallpaperSettingsBinding.inflate(layoutInflater)
+    }
+
+    private val wallpaperManager by lazy {
+        requireComponents.wallpaperManager
     }
 
     override fun onCreateView(
@@ -44,7 +49,7 @@ class WallpaperSettingsFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 FirefoxTheme {
-                    WallpaperSettings(wallpapers = Wallpaper.values().toList())
+                    WallpaperSettings(wallpaperManager)
                 }
             }
         }
@@ -52,22 +57,17 @@ class WallpaperSettingsFragment : Fragment() {
     }
 }
 
-enum class Wallpaper(val drawable: Int) {
-    NONE(R.attr.homeBackground),
-    FIRST(R.drawable.wallpaper_1),
-    SECOND(R.drawable.wallpaper_2),
-    THIRD(R.drawable.wallpaper_1);
-}
-
 @Composable
-fun WallpaperSettings(wallpapers: List<Wallpaper>) {
-    var currentlySelectedWallpaper by remember { mutableStateOf(wallpapers[0]) }
+fun WallpaperSettings(
+    wallpaperManager: WallpaperManager
+) {
+    val currentlySelectedWallpaper = wallpaperManager.currentWallpaper.collectAsState()
     Column {
         Surface {
             WallpaperThumbnails(
-                wallpapers = wallpapers,
-                onSelectionChanged = { currentlySelectedWallpaper = it },
-                selectedWallpaper = currentlySelectedWallpaper
+                wallpapers = wallpaperManager.wallpapers.toList(),
+                onSelectionChanged = { wallpaperManager.updateWallpaperSelection(it) },
+                selectedWallpaper = currentlySelectedWallpaper.value
             )
         }
         Row(
@@ -150,14 +150,15 @@ fun WallpaperImageThumbnail(
     wallpaper: Wallpaper,
 ) {
     Image(
-        painterResource(id = wallpaper.drawable),
+        painterResource(id = wallpaper.resource),
         contentScale = ContentScale.FillBounds,
         contentDescription = wallpaper.name,
+        modifier = Modifier.fillMaxSize()
     )
 }
 
-@Preview
-@Composable
-fun WallpaperSettingsPreview() {
-    WallpaperSettings(wallpapers = Wallpaper.values().toList())
-}
+//@Preview
+//@Composable
+//fun WallpaperSettingsPreview() {
+//    WallpaperSettings(wallpapers = Wallpaper.values().toList())
+//}

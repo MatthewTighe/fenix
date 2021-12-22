@@ -4,55 +4,33 @@
 
 package org.mozilla.fenix.wallpapers
 
-import android.view.View
-import mozilla.components.support.ktx.android.content.getColorFromAttr
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.mozilla.fenix.utils.Settings
 
 /**
  * Provides access to available wallpapers and manages their states.
  */
 class WallpaperManager(private val settings: Settings) {
+    val wallpapers = Wallpaper.values()
 
-    var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
-        set(value) {
-            settings.currentWallpaper = value.name
-            field = value
-        }
+    private var _currentWallpaper = MutableStateFlow(Wallpaper.valueOf(settings.currentWallpaper))
+    var currentWallpaper: StateFlow<Wallpaper> = _currentWallpaper
 
-    /**
-     * Apply the [newWallpaper] into the [wallpaperContainer] and update the [currentWallpaper].
-     */
-    fun updateWallpaper(wallpaperContainer: View, newWallpaper: Wallpaper) {
-        if (newWallpaper == Wallpaper.NONE) {
-            val context = wallpaperContainer.context
-            wallpaperContainer.setBackgroundColor(context.getColorFromAttr(newWallpaper.drawable))
-        } else {
-            wallpaperContainer.setBackgroundResource(newWallpaper.drawable)
-        }
-        currentWallpaper = newWallpaper
+    fun updateWallpaperSelection(wallpaper: Wallpaper) {
+        settings.currentWallpaper = wallpaper.name
+        _currentWallpaper.value = wallpaper
     }
 
-    /**
-     * Returns the next available [Wallpaper], the [currentWallpaper] is the last one then
-     * the first available [Wallpaper] will be returned.
-     */
-    fun switchToNextWallpaper(): Wallpaper {
-        val values = Wallpaper.values()
-        val index = values.indexOf(currentWallpaper) + 1
-
-        return if (index >= values.size) {
-            values.first()
+    fun switchToNextWallpaper() {
+        val current = _currentWallpaper.value
+        val wallpapers = Wallpaper.values()
+        val nextIndex = wallpapers.indexOf(current) + 1
+        val nextWallpaper = if (nextIndex >= wallpapers.size) {
+            wallpapers.first()
         } else {
-            values[index]
+            wallpapers[nextIndex]
         }
-    }
-
-    private fun getCurrentWallpaperFromSettings(): Wallpaper {
-        val currentWallpaper = settings.currentWallpaper
-        return if (currentWallpaper.isEmpty()) {
-            Wallpaper.NONE
-        } else {
-            Wallpaper.valueOf(currentWallpaper)
-        }
+        updateWallpaperSelection(nextWallpaper)
     }
 }
