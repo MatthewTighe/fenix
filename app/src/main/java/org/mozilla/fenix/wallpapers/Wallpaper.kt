@@ -14,8 +14,7 @@ import org.mozilla.fenix.R
 enum class Wallpaper(val resource: Int) {
     NONE(R.attr.homeBackground),
     FIRST(R.drawable.wallpaper_1),
-    SECOND(R.drawable.wallpaper_2),
-    THIRD(R.drawable.wallpaper_1);
+    SECOND(R.drawable.wallpaper_2);
 
     fun applyToView(view: View) {
         if (this == NONE) {

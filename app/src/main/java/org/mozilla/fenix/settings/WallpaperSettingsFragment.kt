@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.mozilla.fenix.databinding.FragmentWallpaperSettingsBinding
@@ -69,16 +70,6 @@ fun WallpaperSettings(
                 onSelectionChanged = { wallpaperManager.updateWallpaperSelection(it) },
                 selectedWallpaper = currentlySelectedWallpaper.value
             )
-        }
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 24.dp)
-        ) {
-            var wallpapersEnabled by remember { mutableStateOf(false) }
-            Text("Logo wallpaper switch")
-            Switch(checked = wallpapersEnabled, onCheckedChange = { wallpapersEnabled = it })
         }
     }
 }
@@ -157,8 +148,12 @@ fun WallpaperImageThumbnail(
     )
 }
 
-//@Preview
-//@Composable
-//fun WallpaperSettingsPreview() {
-//    WallpaperSettings(wallpapers = Wallpaper.values().toList())
-//}
+@Preview
+@Composable
+fun WallpaperThumbnailsPreview() {
+    WallpaperThumbnails(
+        wallpapers = Wallpaper.values().toList(),
+        onSelectionChanged = {},
+        selectedWallpaper = Wallpaper.NONE
+    )
+}
