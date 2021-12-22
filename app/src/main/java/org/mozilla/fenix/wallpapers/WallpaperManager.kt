@@ -17,11 +17,20 @@ class WallpaperManager(private val settings: Settings) {
     private var _currentWallpaper = MutableStateFlow(Wallpaper.valueOf(settings.currentWallpaper))
     var currentWallpaper: StateFlow<Wallpaper> = _currentWallpaper
 
+    /**
+     * Switch the selected wallpaper. This change will be persisted to disk.
+     *
+     * @param wallpaper The wallpaper to switch to.
+     */
     fun updateWallpaperSelection(wallpaper: Wallpaper) {
         settings.currentWallpaper = wallpaper.name
         _currentWallpaper.value = wallpaper
     }
 
+    /**
+     * Update the selected wallpaper to be the next wallpaper, as enumerated by [Wallpaper].
+     * This change will be persisted to disk.
+     */
     fun switchToNextWallpaper() {
         val current = _currentWallpaper.value
         val wallpapers = Wallpaper.values()

@@ -70,6 +70,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                 )
                 true
             }
+            isVisible = FeatureFlags.showWallpapers
         }
 
         val openingScreenRadioHomepage =

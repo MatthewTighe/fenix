@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings
+package org.mozilla.fenix.settings.wallpaper
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -15,14 +11,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -30,68 +25,49 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.FragmentWallpaperSettingsBinding
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperManager
 
-class WallpaperSettingsFragment : Fragment() {
-    private val binding by lazy {
-        FragmentWallpaperSettingsBinding.inflate(layoutInflater)
-    }
-
-    private val wallpaperManager by lazy {
-        requireComponents.wallpaperManager
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding.composeView.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                FirefoxTheme {
-                    WallpaperSettings(wallpaperManager)
-                }
-            }
-        }
-        return binding.root
-    }
-}
-
+/**
+ * A screen for various settings related to wallpapers.
+ *
+ * @param wallpaperManager Manager for retrieving and updating current wallpaper.
+ */
 @Composable
 fun WallpaperSettings(
     wallpaperManager: WallpaperManager
 ) {
-    val currentlySelectedWallpaper = wallpaperManager.currentWallpaper.collectAsState()
-    Column {
-        Surface {
-            WallpaperThumbnails(
-                wallpapers = wallpaperManager.wallpapers.toList(),
-                onSelectionChanged = { wallpaperManager.updateWallpaperSelection(it) },
-                selectedWallpaper = currentlySelectedWallpaper.value
-            )
-        }
+    val selectedWallpaper = wallpaperManager.currentWallpaper.collectAsState()
+    Surface(color = FirefoxTheme.colors.layer2) {
+        WallpaperThumbnails(
+            wallpapers = wallpaperManager.wallpapers.toList(),
+            selectedWallpaper = selectedWallpaper.value,
+            onSelectionChanged = { wallpaperManager.updateWallpaperSelection(it) }
+        )
     }
 }
 
+/**
+ * A grid of selectable wallpaper thumbnails.
+ *
+ * @param wallpapers Wallpapers to add to grid
+ * @param selectedWallpaper The currently selected wallpaper
+ * @param numColumns The number of columns that will occupy the grid.
+ * @param onSelectionChanged Action to take when a new wallpaper is selected.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WallpaperThumbnails(
+private fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
-    onSelectionChanged: (Wallpaper) -> Unit,
     selectedWallpaper: Wallpaper,
     numColumns: Int = 3,
+    onSelectionChanged: (Wallpaper) -> Unit,
 ) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(numColumns),
@@ -100,22 +76,30 @@ fun WallpaperThumbnails(
         items(wallpapers) { wallpaper ->
             WallpaperThumbnailItem(
                 wallpaper = wallpaper,
-                onSelectionChanged = onSelectionChanged,
-                isCurrentlySelected = selectedWallpaper == wallpaper
+                isSelected = selectedWallpaper == wallpaper,
+                onSelectionChanged = onSelectionChanged
             )
         }
     }
 }
 
+/**
+ * A single wallpaper thumbnail.
+ *
+ * @param wallpaper The wallpaper to display.
+ * @param isSelected Whether the wallpaper is currently selected.
+ * @param aspectRatio The ratio of height to width of the thumbnail
+ * @param onSelectionChanged Action to take when wallpaper is selected.
+ */
 @Composable
-fun WallpaperThumbnailItem(
+private fun WallpaperThumbnailItem(
     wallpaper: Wallpaper,
-    onSelectionChanged: (Wallpaper) -> Unit,
-    isCurrentlySelected: Boolean,
-    aspectRatio: Float = 1.1f
+    isSelected: Boolean,
+    aspectRatio: Float = 1.1f,
+    onSelectionChanged: (Wallpaper) -> Unit
 ) {
     val thumbnailShape = RoundedCornerShape(8.dp)
-    val border = if (isCurrentlySelected) {
+    val border = if (isSelected) {
         Modifier.border(
             BorderStroke(width = 2.dp, color = FirefoxTheme.colors.borderSelected),
             thumbnailShape
@@ -149,24 +133,27 @@ fun WallpaperThumbnailItem(
     }
 }
 
+/**
+ * A image of a drawable wallpaper.
+ *
+ * @param wallpaper The wallpaper to use.
+ */
 @Composable
-fun WallpaperImageThumbnail(
-    wallpaper: Wallpaper,
-) {
-    val localizedContentDescription = LocalContext.current.resources.getString(
+private fun WallpaperImageThumbnail(wallpaper: Wallpaper) {
+    val contentDescription = stringResource(
         R.string.content_description_wallpaper_name, wallpaper.name
     )
     Image(
         painterResource(id = wallpaper.resource),
         contentScale = ContentScale.FillBounds,
-        contentDescription = localizedContentDescription,
+        contentDescription = contentDescription,
         modifier = Modifier.fillMaxSize()
     )
 }
 
 @Preview
 @Composable
-fun WallpaperThumbnailsPreview() {
+private fun WallpaperThumbnailsPreview() {
     WallpaperThumbnails(
         wallpapers = Wallpaper.values().toList(),
         onSelectionChanged = {},

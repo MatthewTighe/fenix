@@ -31,7 +31,7 @@
 
     <androidx.preference.Preference
         android:key="@string/pref_key_wallpapers"
-        android:title="@string/preferences_wallpapers"
+        android:title="@string/customize_wallpapers"
         app:isPreferenceVisible="true" />
 
     <androidx.preference.PreferenceCategory

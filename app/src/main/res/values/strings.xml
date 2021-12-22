@@ -460,8 +460,10 @@
     <string name="customize_toggle_recent_searches" moz:removedIn="96" tools:ignore="UnusedResources">Recent searches</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+
+    <!-- Wallpapers -->
     <!-- Title for preference to open wallpapers -->
-    <string name="preferences_wallpapers">Wallpapers</string>
+    <string name="customize_wallpapers">Wallpapers</string>
     <!-- Content description for various wallpapers -->
     <string name="content_description_wallpaper_name">Wallpaper Item: %1$s</string>
 
