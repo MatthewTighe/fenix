@@ -464,7 +464,7 @@
     <!-- Wallpapers -->
     <!-- Title for preference to open wallpapers -->
     <string name="customize_wallpapers">Wallpapers</string>
-    <!-- Content description for various wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
     <string name="content_description_wallpaper_name">Wallpaper Item: %1$s</string>
 
     <!-- Add-on Installation from AMO-->

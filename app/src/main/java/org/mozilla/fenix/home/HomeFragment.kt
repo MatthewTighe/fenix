@@ -412,8 +412,8 @@ class HomeFragment : Fragment() {
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     val wallpaperManager = requireComponents.wallpaperManager
-                    wallpaperManager.currentWallpaper.collect {
-                        it.applyToView(binding.homeLayout)
+                    wallpaperManager.currentWallpaper.collect { wallpaper ->
+                        wallpaperManager.applyToView(binding.homeLayout, wallpaper)
                     }
                 }
             }
