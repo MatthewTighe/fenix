@@ -34,10 +34,8 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -69,6 +67,7 @@ import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.lib.state.ext.observe
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -81,12 +80,14 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
 import org.mozilla.fenix.components.tips.Tip
@@ -163,6 +164,9 @@ class HomeFragment : Fragment() {
     private val store: BrowserStore
         get() = requireComponents.core.store
 
+    private val appStore: AppStore
+        get() = requireComponents.appStore
+
     private val onboarding by lazy {
         requireComponents.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             FenixOnboarding(requireContext())
@@ -232,6 +236,14 @@ class HomeFragment : Fragment() {
             ::dispatchModeChanges
         )
 
+        val appStore = requireContext().components.appStore
+        appStore.observe(viewLifecycleOwner) {
+            if (shouldEnableWallpaper()) {
+                lifecycleScope.launch(Main) {
+                    it.wallpaper.applyToView(binding.homeLayout)
+                }
+            }
+        }
         homeFragmentStore = StoreProvider.get(this) {
             HomeFragmentStore(
                 HomeFragmentState(
@@ -408,16 +420,6 @@ class HomeFragment : Fragment() {
             "HomeFragment.onCreateView",
         )
 
-        if (shouldEnableWallpaper()) {
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    val wallpaperManager = requireComponents.wallpaperManager
-                    wallpaperManager.currentWallpaper.collect { wallpaper ->
-                        wallpaperManager.applyToView(binding.homeLayout, wallpaper)
-                    }
-                }
-            }
-        }
         return binding.root
     }
 
@@ -778,8 +780,7 @@ class HomeFragment : Fragment() {
 
         if (shouldEnableWallpaper()) {
             binding.wordmark.setOnClickListener {
-                val manager = requireComponents.wallpaperManager
-                manager.switchToNextWallpaper()
+                appStore.dispatch(AppAction.SwitchToNextWallpaper)
             }
         }
     }

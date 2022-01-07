@@ -18,10 +18,6 @@ class WallpaperSettingsFragment : Fragment() {
     private var _binding: FragmentWallpaperSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private val wallpaperManager by lazy {
-        requireComponents.wallpaperManager
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,7 +28,7 @@ class WallpaperSettingsFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 FirefoxTheme {
-                    WallpaperSettings(wallpaperManager)
+                    WallpaperSettings(requireComponents.appStore)
                 }
             }
         }

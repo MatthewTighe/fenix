@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -29,10 +28,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
-import org.mozilla.fenix.wallpapers.WallpaperManager
 
 /**
  * A screen for various settings related to wallpapers.
@@ -41,14 +42,16 @@ import org.mozilla.fenix.wallpapers.WallpaperManager
  */
 @Composable
 fun WallpaperSettings(
-    wallpaperManager: WallpaperManager
+    appStore: AppStore
 ) {
-    val selectedWallpaper = wallpaperManager.currentWallpaper.collectAsState()
+    val selectedWallpaper = appStore.observeAsComposableState {
+            state -> state.wallpaper
+    }.value
     Surface(color = FirefoxTheme.colors.layer2) {
         WallpaperThumbnails(
-            wallpapers = wallpaperManager.wallpapers.toList(),
-            selectedWallpaper = selectedWallpaper.value,
-            onSelectionChanged = { wallpaperManager.updateWallpaperSelection(it) }
+            wallpapers = Wallpaper.values().toList(),
+            selectedWallpaper = selectedWallpaper ?: Wallpaper.NONE,
+            onSelectionChanged = { appStore.dispatch(AppAction.UpdateWallpaper(it)) }
         )
     }
 }
