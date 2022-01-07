@@ -44,9 +44,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
 fun WallpaperSettings(
     appStore: AppStore
 ) {
-    val selectedWallpaper = appStore.observeAsComposableState {
-            state -> state.wallpaper
-    }.value
+    val selectedWallpaper = appStore.observeAsComposableState { state -> state.wallpaper }.value
     Surface(color = FirefoxTheme.colors.layer2) {
         WallpaperThumbnails(
             wallpapers = Wallpaper.values().toList(),
@@ -104,12 +102,12 @@ private fun WallpaperThumbnailItem(
     val thumbnailShape = RoundedCornerShape(8.dp)
     val border = if (isSelected) {
         Modifier.border(
-            BorderStroke(width = 2.dp, color = FirefoxTheme.colors.borderSelected),
+            BorderStroke(width = 2.dp, color = FirefoxTheme.colors.borderAccent),
             thumbnailShape
         )
     } else {
         Modifier.border(
-            BorderStroke(width = 1.dp, color = FirefoxTheme.colors.borderDivider),
+            BorderStroke(width = 1.dp, color = FirefoxTheme.colors.borderDefault),
             thumbnailShape
         )
     }

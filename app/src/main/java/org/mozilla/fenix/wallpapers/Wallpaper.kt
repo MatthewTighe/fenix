@@ -21,7 +21,7 @@ enum class Wallpaper(val resource: Int, val isDark: Boolean) {
     FIRST(resource = R.drawable.wallpaper_1, isDark = true),
     SECOND(resource = R.drawable.wallpaper_2, isDark = false);
 
-    fun getNextWallpaper(): Wallpaper {
+    val nextWallpaper: Wallpaper get() {
         val wallpapers = values()
         val nextIndex = wallpapers.indexOf(this) + 1
         return if (nextIndex >= wallpapers.size) {

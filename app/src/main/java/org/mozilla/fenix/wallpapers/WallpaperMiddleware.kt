@@ -16,14 +16,14 @@ class WallpaperMiddleware(private val settings: Settings) : Middleware<AppState,
         next: (AppAction) -> Unit,
         action: AppAction
     ) {
-        when(action) {
+        when (action) {
             AppAction.InitAction -> {
                 val wallpaper = Wallpaper.valueOf(settings.currentWallpaper)
                 context.store.dispatch(AppAction.UpdateWallpaper(wallpaper))
             }
             is AppAction.SwitchToNextWallpaper -> {
                 val current = Wallpaper.valueOf(settings.currentWallpaper)
-                settings.currentWallpaper = current.getNextWallpaper().name
+                settings.currentWallpaper = current.nextWallpaper.name
             }
             is AppAction.UpdateWallpaper -> {
                 settings.currentWallpaper = action.wallpaper.name

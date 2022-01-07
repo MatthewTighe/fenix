@@ -15,7 +15,7 @@ internal object AppStoreReducer {
         is AppAction.UpdateInactiveExpanded ->
             state.copy(inactiveTabsExpanded = action.expanded)
         is AppAction.SwitchToNextWallpaper ->
-            state.copy(wallpaper = state.wallpaper.getNextWallpaper())
+            state.copy(wallpaper = state.wallpaper.nextWallpaper)
         is AppAction.UpdateWallpaper ->
             state.copy(wallpaper = action.wallpaper)
     }
