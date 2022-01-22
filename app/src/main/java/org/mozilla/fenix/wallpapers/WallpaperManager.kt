@@ -16,6 +16,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.utils.Settings
+import java.io.File
 
 /**
  * Provides access to available wallpapers and manages their states.
@@ -31,23 +32,28 @@ class WallpaperManager(
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
         set(value) {
             settings.currentWallpaper = value.name
+            wallpaperStorage.saveAsBitmap(value)
             field = value
         }
 
     /**
-     * Apply the [newWallpaper] into the [wallpaperContainer] and update the [currentWallpaper].
+     * Apply [currentWallpaper] to the [wallpaperContainer].
      */
-    fun updateWallpaper(wallpaperContainer: View, newWallpaper: Wallpaper) {
+    fun applyCurrentWallpaperToView(wallpaperContainer: View) {
+        val wallpaper = currentWallpaper
+        applyWallpaperToView(wallpaperContainer, wallpaper)
+    }
+
+    private fun applyWallpaperToView(wallpaperContainer: View, wallpaper: Wallpaper) {
         val context = wallpaperContainer.context
-        if (newWallpaper == defaultWallpaper) {
+        if (wallpaper == defaultWallpaper) {
             wallpaperContainer.setBackgroundColor(context.getColorFromAttr(DEFAULT_RESOURCE))
             logger.info("Wallpaper update to default background")
         } else {
-            logger.info("Wallpaper update to ${newWallpaper.name}")
-            val bitmap = loadWallpaperFromAssets(newWallpaper, context)
+            logger.info("Wallpaper update to ${wallpaper.name}")
+            val bitmap = wallpaperStorage.loadBitmap(wallpaper)
             wallpaperContainer.background = BitmapDrawable(context.resources, bitmap)
         }
-        currentWallpaper = newWallpaper
 
         adjustTheme(wallpaperContainer.context)
     }
@@ -87,18 +93,20 @@ class WallpaperManager(
     }
 
     /**
-     * Returns the next available [Wallpaper], the [currentWallpaper] is the last one then
-     * the first available [Wallpaper] will be returned.
+     * Switch the current wallpaper to the next in [availableWallpapers] and apply it to
+     * [wallpaperContainer].
      */
-    fun switchToNextWallpaper(): Wallpaper {
+    fun applyNextWallpaperToView(wallpaperContainer: View) {
         val values = availableWallpapers
         val index = values.indexOf(currentWallpaper) + 1
 
-        return if (index >= values.size) {
+        val nextWallpaper = if (index >= values.size) {
             values.first()
         } else {
             values[index]
         }
+        currentWallpaper = nextWallpaper
+        applyWallpaperToView(wallpaperContainer, nextWallpaper)
     }
 
     private fun getCurrentWallpaperFromSettings(): Wallpaper {
@@ -126,7 +134,7 @@ class WallpaperManager(
     }
 
     private fun loadWallpapers(): List<Wallpaper> {
-        val wallpapersFromStorage = wallpaperStorage.loadAll()
+        val wallpapersFromStorage = wallpaperStorage.loadAvailableMetaData()
         return if (wallpapersFromStorage.isNotEmpty()) {
             listOf(defaultWallpaper) + wallpapersFromStorage
         } else {

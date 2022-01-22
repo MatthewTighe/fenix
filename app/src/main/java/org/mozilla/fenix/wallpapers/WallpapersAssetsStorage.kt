@@ -6,10 +6,14 @@ package org.mozilla.fenix.wallpapers
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.File
 import java.lang.Exception
 
 class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
@@ -17,7 +21,7 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
     private val wallpapersDirectory = "wallpapers"
 
     @Suppress("TooGenericExceptionCaught")
-    override fun loadAll(): List<Wallpaper> {
+    override fun loadAvailableMetaData(): List<Wallpaper> {
         val assetsManager = context.assets
         return try {
             assetsManager.readArray("$wallpapersDirectory/wallpapers.json").toWallpapers()
@@ -25,6 +29,20 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
             logger.error("Unable to load wallpaper", e)
             emptyList()
         }
+    }
+
+    override fun loadBitmap(wallpaper: Wallpaper): Bitmap {
+        val path = context.getWallpaperName(wallpaper)
+        val file = File(context.filesDir, path)
+        return BitmapFactory.decodeFile(file.absolutePath)
+    }
+
+    override fun saveAsBitmap(wallpaper: Wallpaper) {
+        if (wallpaper == WallpaperManager.defaultWallpaper) return
+        val portraitOutput = context.openFileOutput(wallpaper.portraitName, Context.MODE_PRIVATE)
+        context.assets.open(wallpaper.portraitPath).copyTo(portraitOutput)
+        val landscapeOutput = context.openFileOutput(wallpaper.landscapeName, Context.MODE_PRIVATE)
+        context.assets.open(wallpaper.landscapePath).copyTo(landscapeOutput)
     }
 
     private fun JSONArray.toWallpapers(): List<Wallpaper> {
@@ -52,4 +70,14 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
             it.readText()
         }
     )
+
+    private fun Context.getWallpaperName(wallpaper: Wallpaper) =
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            wallpaper.landscapeName
+        } else {
+            wallpaper.portraitName
+        }
+
+    private val Wallpaper.landscapeName get() = "landscape-${this.name}"
+    private val Wallpaper.portraitName get() = "portrait-${this.name}"
 }

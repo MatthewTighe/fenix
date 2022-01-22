@@ -396,7 +396,7 @@ class HomeFragment : Fragment() {
             // We only want to update the wallpaper when it's different from the default one
             // as the default is applied already on xml by default.
             if (wallpaperManger.currentWallpaper != WallpaperManager.defaultWallpaper) {
-                wallpaperManger.updateWallpaper(binding.homeLayout, wallpaperManger.currentWallpaper)
+                wallpaperManger.applyCurrentWallpaperToView(binding.homeLayout)
             }
         }
 
@@ -767,10 +767,7 @@ class HomeFragment : Fragment() {
         if (shouldEnableWallpaper() && context.settings().wallpapersSwitchedByLogoTap) {
             binding.wordmark.setOnClickListener {
                 val manager = requireComponents.wallpaperManager
-                manager.updateWallpaper(
-                    wallpaperContainer = binding.homeLayout,
-                    newWallpaper = manager.switchToNextWallpaper()
-                )
+                manager.applyNextWallpaperToView(wallpaperContainer = binding.homeLayout)
             }
         }
     }

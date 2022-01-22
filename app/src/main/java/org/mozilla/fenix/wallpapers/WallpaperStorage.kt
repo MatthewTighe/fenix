@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix.wallpapers
+
+import android.graphics.Bitmap
+
 /**
  * Represents a storage to store [Wallpaper]s.
  */
@@ -10,5 +13,9 @@ interface WallpaperStorage {
     /**
      * Returns all [Wallpaper] from the storage.
      */
-    fun loadAll(): List<Wallpaper>
+    fun loadAvailableMetaData(): List<Wallpaper>
+
+    fun loadBitmap(wallpaper: Wallpaper): Bitmap
+
+    fun saveAsBitmap(wallpaper: Wallpaper)
 }
