@@ -16,7 +16,6 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.utils.Settings
-import java.io.File
 
 /**
  * Provides access to available wallpapers and manages their states.
@@ -31,6 +30,8 @@ class WallpaperManager(
 
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
         set(value) {
+            val previousWallpaper = field
+            wallpaperStorage.deleteWallpaper(previousWallpaper)
             settings.currentWallpaper = value.name
             wallpaperStorage.saveAsBitmap(value)
             field = value
@@ -50,9 +51,13 @@ class WallpaperManager(
             wallpaperContainer.setBackgroundColor(context.getColorFromAttr(DEFAULT_RESOURCE))
             logger.info("Wallpaper update to default background")
         } else {
-            logger.info("Wallpaper update to ${wallpaper.name}")
-            val bitmap = wallpaperStorage.loadBitmap(wallpaper)
+            val bitmap = if (wallpaper in availableWallpapers) {
+                loadWallpaperFromAssets(wallpaper, context)
+            } else {
+                wallpaperStorage.loadBitmap(wallpaper)
+            }
             wallpaperContainer.background = BitmapDrawable(context.resources, bitmap)
+            logger.info("Wallpaper update to ${wallpaper.name}")
         }
 
         adjustTheme(wallpaperContainer.context)
@@ -134,7 +139,7 @@ class WallpaperManager(
     }
 
     private fun loadWallpapers(): List<Wallpaper> {
-        val wallpapersFromStorage = wallpaperStorage.loadAvailableMetaData()
+        val wallpapersFromStorage = wallpaperStorage.loadMetaData()
         return if (wallpapersFromStorage.isNotEmpty()) {
             listOf(defaultWallpaper) + wallpapersFromStorage
         } else {

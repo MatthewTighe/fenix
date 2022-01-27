@@ -13,9 +13,11 @@ interface WallpaperStorage {
     /**
      * Returns all [Wallpaper] from the storage.
      */
-    fun loadAvailableMetaData(): List<Wallpaper>
+    fun loadMetaData(): List<Wallpaper>
 
     fun loadBitmap(wallpaper: Wallpaper): Bitmap
 
     fun saveAsBitmap(wallpaper: Wallpaper)
+
+    fun deleteWallpaper(wallpaper: Wallpaper)
 }

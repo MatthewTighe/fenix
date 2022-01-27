@@ -9,6 +9,9 @@ import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException
@@ -21,7 +24,7 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
     private val wallpapersDirectory = "wallpapers"
 
     @Suppress("TooGenericExceptionCaught")
-    override fun loadAvailableMetaData(): List<Wallpaper> {
+    override fun loadMetaData(): List<Wallpaper> {
         val assetsManager = context.assets
         return try {
             assetsManager.readArray("$wallpapersDirectory/wallpapers.json").toWallpapers()
@@ -33,8 +36,12 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
 
     override fun loadBitmap(wallpaper: Wallpaper): Bitmap {
         val path = context.getWallpaperName(wallpaper)
-        val file = File(context.filesDir, path)
-        return BitmapFactory.decodeFile(file.absolutePath)
+        return runBlocking {
+            withContext(Dispatchers.IO) {
+                val file = File(context.filesDir, path)
+                return@withContext BitmapFactory.decodeFile(file.absolutePath)
+            }
+        }
     }
 
     override fun saveAsBitmap(wallpaper: Wallpaper) {
@@ -43,6 +50,11 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
         context.assets.open(wallpaper.portraitPath).copyTo(portraitOutput)
         val landscapeOutput = context.openFileOutput(wallpaper.landscapeName, Context.MODE_PRIVATE)
         context.assets.open(wallpaper.landscapePath).copyTo(landscapeOutput)
+    }
+
+    override fun deleteWallpaper(wallpaper: Wallpaper) {
+        context.deleteFile(wallpaper.portraitName)
+        context.deleteFile(wallpaper.landscapeName)
     }
 
     private fun JSONArray.toWallpapers(): List<Wallpaper> {
