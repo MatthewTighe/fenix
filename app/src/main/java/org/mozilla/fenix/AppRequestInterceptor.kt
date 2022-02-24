@@ -15,6 +15,8 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
+import org.mozilla.fenix.settings.HomeSettingsFragmentDirections
+import org.mozilla.fenix.wallpapers.AdjustLinkInterceptor
 import java.lang.ref.WeakReference
 
 class AppRequestInterceptor(
@@ -42,7 +44,21 @@ class AppRequestInterceptor(
             return response
         }
 
-        return context.components.services.appLinksInterceptor
+        val navToWallpaperSettings: () -> Unit = {
+            navController?.get()?.navigate(
+                GlobalDirections.WallpaperSettings.navDirections
+            )
+        }
+        return AdjustLinkInterceptor(navToWallpaperSettings).onLoadRequest(
+            engineSession,
+            uri,
+            lastUri,
+            hasUserGesture,
+            isSameDomain,
+            isRedirect,
+            isDirectNavigation,
+            isSubframeRequest
+        ) ?: context.components.services.appLinksInterceptor
             .onLoadRequest(
                 engineSession,
                 uri,

@@ -89,13 +89,13 @@ android {
         // so we only set the git hash in release builds to avoid possible recompilation in debug builds.
         buildConfigField "String", "GIT_HASH", "\"${Config.getGitHash()}\""
 
-        if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
+//        if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
             signingConfig signingConfigs.debug
-        }
+//        }
 
-        if (gradle.hasProperty("localProperties.debuggable")) {
+//        if (gradle.hasProperty("localProperties.debuggable")) {
             debuggable true
-        }
+//        }
     }
 
     buildTypes {
