@@ -52,8 +52,12 @@ class PocketStoriesViewHolder(
     override fun Content() {
         val horizontalPadding = dimensionResource(R.dimen.home_item_horizontal_margin)
 
+        val homeScreenReady = components.appStore
+            .observeAsComposableState { state -> state.homeScreenReady }.value ?: false
+
         val stories = components.appStore
-            .observeAsComposableState { state -> state.pocketStories }.value
+                .observeAsComposableState { state -> state.pocketStories }.value
+                .takeIf { homeScreenReady }
 
         LaunchedEffect(stories) {
             // We should report back when a certain story is actually being displayed.

@@ -49,10 +49,15 @@ class PocketCategoriesViewHolder(
             composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
         composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
 
+        val homeScreenReady = components.appStore
+            .observeAsComposableState { state -> state.homeScreenReady }.value ?: false
+
         val categories = components.appStore
             .observeAsComposableState { state -> state.pocketStoriesCategories }.value
+            .takeIf { homeScreenReady }
         val categoriesSelections = components.appStore
             .observeAsComposableState { state -> state.pocketStoriesCategoriesSelections }.value
+            .takeIf { homeScreenReady }
 
         Column {
             Spacer(Modifier.height(24.dp))

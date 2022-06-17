@@ -50,6 +50,7 @@ import org.mozilla.fenix.gleanplumb.MessagingState
  */
 data class AppState(
     val inactiveTabsExpanded: Boolean = false,
+    val homeScreenReady: Boolean = false,
     val nonFatalCrashes: List<NativeCodeCrash> = emptyList(),
     val collections: List<TabCollection> = emptyList(),
     val expandedCollections: Set<Long> = emptySet(),

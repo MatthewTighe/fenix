@@ -27,6 +27,7 @@ import org.mozilla.fenix.gleanplumb.MessagingState
  */
 sealed class AppAction : Action {
     data class UpdateInactiveExpanded(val expanded: Boolean) : AppAction()
+    data class UpdateHomeScreenReady(val ready: Boolean): AppAction()
     data class AddNonFatalCrash(val crash: NativeCodeCrash) : AppAction()
     data class RemoveNonFatalCrash(val crash: NativeCodeCrash) : AppAction()
     object RemoveAllNonFatalCrashes : AppAction()
