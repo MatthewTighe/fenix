@@ -24,9 +24,10 @@ class WallpaperFileManager(
      * files for each of the following orientation and theme combinations:
      * light/portrait - light/landscape - dark/portrait - dark/landscape
      */
-    suspend fun lookupExpiredWallpaper(name: String): Wallpaper.Expired? = withContext(Dispatchers.IO) {
+    suspend fun lookupExpiredWallpaper(name: String): Wallpaper? = withContext(Dispatchers.IO) {
         if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
-            Wallpaper.Expired(name)
+            Wallpaper(id = name, collectionId = "", 0, 0,
+                null, null, null)
         } else null
     }
 
@@ -40,9 +41,9 @@ class WallpaperFileManager(
     /**
      * Remove all wallpapers that are not the [currentWallpaper] or in [availableWallpapers].
      */
-    fun clean(currentWallpaper: Wallpaper, availableWallpapers: List<Wallpaper.Remote>) {
+    fun clean(currentWallpaper: Wallpaper, availableWallpapers: List<Wallpaper>) {
         scope.launch {
-            val wallpapersToKeep = (listOf(currentWallpaper) + availableWallpapers).map { it.name }
+            val wallpapersToKeep = (listOf(currentWallpaper) + availableWallpapers).map { it.id }
             cleanChildren(portraitDirectory, wallpapersToKeep)
             cleanChildren(landscapeDirectory, wallpapersToKeep)
         }

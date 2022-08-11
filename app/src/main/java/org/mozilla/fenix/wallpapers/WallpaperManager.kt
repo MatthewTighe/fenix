@@ -82,7 +82,7 @@ class WallpaperManager(
          *  Get whether the default wallpaper should be used.
          */
         fun isDefaultTheCurrentWallpaper(settings: Settings): Boolean = with(settings.currentWallpaper) {
-            return isEmpty() || equals(defaultWallpaper.name)
+            return isEmpty() || equals(defaultWallpaper.id)
         }
 
         val defaultWallpaper = Wallpaper.Default

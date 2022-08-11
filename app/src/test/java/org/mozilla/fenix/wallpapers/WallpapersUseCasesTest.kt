@@ -38,6 +38,7 @@ class WallpapersUseCasesTest {
     private val appStore = AppStore()
     private val mockSettings = mockk<Settings>()
     private val mockDownloader = mockk<WallpaperDownloader>(relaxed = true)
+    private val mockMetadataFetcher = mockk<WallpaperMetadataFetcher>()
     private val mockFileManager = mockk<WallpaperFileManager> {
         every { clean(any(), any()) } just runs
     }
@@ -52,21 +53,22 @@ class WallpapersUseCasesTest {
         }
         val possibleWallpapers = fakeRemoteWallpapers + fakeExpiredRemoteWallpapers
         every { mockSettings.currentWallpaper } returns ""
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns possibleWallpapers
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
         WallpapersUseCases.DefaultInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
+            mockMetadataFetcher,
             mockSettings,
             "en-US",
-            possibleWallpapers = possibleWallpapers
         ).invoke()
 
         val expectedFilteredWallpaper = fakeExpiredRemoteWallpapers[0]
         appStore.waitUntilIdle()
         assertFalse(appStore.state.wallpaperState.availableWallpapers.contains(expectedFilteredWallpaper))
-        verify { mockFileManager.clean(Wallpaper.Default, possibleWallpapers) }
+        verify { mockFileManager.clean(Wallpaper.Default, any()) }
     }
 
     @Test
@@ -75,16 +77,18 @@ class WallpapersUseCasesTest {
             makeFakeRemoteWallpaper(TimeRelation.LATER, name)
         }
         val expiredWallpaper = makeFakeRemoteWallpaper(TimeRelation.BEFORE, "expired")
-        every { mockSettings.currentWallpaper } returns expiredWallpaper.name
+        val possibleWallpapers = fakeRemoteWallpapers + listOf(expiredWallpaper)
+        every { mockSettings.currentWallpaper } returns expiredWallpaper.id
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns possibleWallpapers
 
         WallpapersUseCases.DefaultInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
+            mockMetadataFetcher,
             mockSettings,
             "en-US",
-            possibleWallpapers = fakeRemoteWallpapers + listOf(expiredWallpaper)
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -100,14 +104,15 @@ class WallpapersUseCasesTest {
         val locale = "en-CA"
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns fakeRemoteWallpapers
 
         WallpapersUseCases.DefaultInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
+            mockMetadataFetcher,
             mockSettings,
             locale,
-            possibleWallpapers = fakeRemoteWallpapers
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -121,14 +126,15 @@ class WallpapersUseCasesTest {
         }
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns fakeRemoteWallpapers
 
         WallpapersUseCases.DefaultInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
+            mockMetadataFetcher,
             mockSettings,
             "en-US",
-            possibleWallpapers = fakeRemoteWallpapers
         ).invoke()
 
         for (fakeRemoteWallpaper in fakeRemoteWallpapers) {
@@ -143,18 +149,19 @@ class WallpapersUseCasesTest {
         }
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns fakeRemoteWallpapers
 
         WallpapersUseCases.DefaultInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
+            mockMetadataFetcher,
             mockSettings,
             "en-US",
-            possibleWallpapers = fakeRemoteWallpapers
         ).invoke()
 
         appStore.waitUntilIdle()
-        assertTrue(appStore.state.wallpaperState.currentWallpaper is Wallpaper.Default)
+        assertTrue(appStore.state.wallpaperState.currentWallpaper == Wallpaper.Default)
     }
 
     @Test
@@ -164,16 +171,17 @@ class WallpapersUseCasesTest {
             makeFakeRemoteWallpaper(TimeRelation.LATER, name)
         }
         val possibleWallpapers = listOf(selectedWallpaper) + fakeRemoteWallpapers
-        every { mockSettings.currentWallpaper } returns selectedWallpaper.name
+        every { mockSettings.currentWallpaper } returns selectedWallpaper.id
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns possibleWallpapers
 
         WallpapersUseCases.DefaultInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
+            mockMetadataFetcher,
             mockSettings,
             "en-US",
-            possibleWallpapers = possibleWallpapers
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -195,9 +203,9 @@ class WallpapersUseCasesTest {
         ).invoke(selectedWallpaper)
 
         appStore.waitUntilIdle()
-        assertEquals(selectedWallpaper.name, slot.captured)
+        assertEquals(selectedWallpaper.id, slot.captured)
         assertEquals(selectedWallpaper, appStore.state.wallpaperState.currentWallpaper)
-        assertEquals(selectedWallpaper.name, Wallpapers.wallpaperSelected.testGetValue()?.first()?.extra?.get("name")!!)
+        assertEquals(selectedWallpaper.id, Wallpapers.wallpaperSelected.testGetValue()?.first()?.extra?.get("name")!!)
     }
 
     private enum class TimeRelation {
@@ -213,7 +221,7 @@ class WallpapersUseCasesTest {
         timeRelation: TimeRelation,
         name: String = "name",
         isInPromo: Boolean = true
-    ): Wallpaper.Remote {
+    ): Wallpaper {
         fakeCalendar.time = baseFakeDate
         when (timeRelation) {
             TimeRelation.BEFORE -> fakeCalendar.add(Calendar.DATE, -5)
@@ -222,9 +230,19 @@ class WallpapersUseCasesTest {
         }
         val relativeTime = fakeCalendar.time
         return if (isInPromo) {
-            Wallpaper.Remote.House(name = name, expirationDate = relativeTime)
+            generateWallpaper(id = name, endDate = relativeTime)
         } else {
-            Wallpaper.Remote.Firefox(name = name)
+            generateWallpaper(id = name, endDate = relativeTime)
         }
     }
+
+    private fun generateWallpaper(
+        id: String = "",
+        collectionId: String = "",
+        textColor: Long = 0,
+        cardCard: Long = 0,
+        availableLocales: List<String>? = listOf("en-US"),
+        startDate: Date? = null,
+        endDate: Date? = null,
+    ) = Wallpaper(id, collectionId, textColor, cardCard, availableLocales, startDate, endDate)
 }

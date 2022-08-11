@@ -33,7 +33,7 @@ class WallpaperDownloader(
      * found at a remote path in the form:
      * <WALLPAPER_URL>/<resolution>/<orientation>/<app theme>/<wallpaper theme>/<wallpaper name>.png
      */
-    suspend fun downloadWallpaper(wallpaper: Wallpaper.Remote) = withContext(Dispatchers.IO) {
+    suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(Dispatchers.IO) {
         if (remoteHost.isNullOrEmpty()) {
             return@withContext
         }
@@ -71,15 +71,15 @@ class WallpaperDownloader(
 
     private data class WallpaperMetadata(val remotePath: String, val localPath: String)
 
-    private fun Wallpaper.Remote.toMetadata(context: Context): List<WallpaperMetadata> =
+    private fun Wallpaper.toMetadata(context: Context): List<WallpaperMetadata> =
         listOf("landscape", "portrait").flatMap { orientation ->
             listOf("light", "dark").map { theme ->
-                val localPath = "wallpapers/$orientation/$theme/$name.png"
+                val localPath = "wallpapers/$orientation/$theme/$id.png"
                 val remotePath = "${context.resolutionSegment()}/" +
                     "$orientation/" +
                     "$theme/" +
-                    "$remoteParentDirName/" +
-                    "$name.png"
+                    "$collectionId/" +
+                    "$id.png"
                 WallpaperMetadata(remotePath, localPath)
             }
         }

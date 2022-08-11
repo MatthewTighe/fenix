@@ -245,7 +245,7 @@ private fun WallpaperThumbnailItem(
                 bitmap = it.asImageBitmap(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = stringResource(
-                    R.string.wallpapers_item_name_content_description, wallpaper.name
+                    R.string.wallpapers_item_name_content_description, wallpaper.id
                 ),
                 modifier = Modifier.fillMaxSize(),
             )

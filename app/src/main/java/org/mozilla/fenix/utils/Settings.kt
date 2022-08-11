@@ -187,7 +187,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var currentWallpaper by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_current_wallpaper),
-        default = Wallpaper.Default.name
+        default = Wallpaper.Default.id
     )
 
     var wallpapersSwitchedByLogoTap by booleanPreference(

@@ -22,7 +22,7 @@ class WallpaperManagerTest {
 
     @Test
     fun `GIVEN the default wallpaper is set to be shown WHEN checking whether the current wallpaper should be default THEN return true`() {
-        every { mockSettings.currentWallpaper } returns WallpaperManager.defaultWallpaper.name
+        every { mockSettings.currentWallpaper } returns WallpaperManager.defaultWallpaper.id
 
         val result = WallpaperManager.isDefaultTheCurrentWallpaper(mockSettings)
 

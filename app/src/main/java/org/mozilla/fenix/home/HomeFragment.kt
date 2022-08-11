@@ -46,7 +46,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -751,7 +750,7 @@ class HomeFragment : Fragment() {
                 val newWallpaper = manager.switchToNextWallpaper()
                 Wallpapers.wallpaperSwitched.record(
                     Wallpapers.WallpaperSwitchedExtra(
-                        name = newWallpaper.name,
+                        name = newWallpaper.id,
                         themeCollection = newWallpaper::class.simpleName
                     )
                 )
@@ -965,7 +964,7 @@ class HomeFragment : Fragment() {
                     // We only want to update the wallpaper when it's different from the default one
                     // as the default is applied already on xml by default.
                     when (val currentWallpaper = state.wallpaperState.currentWallpaper) {
-                        is Wallpaper.Default -> {
+                        Wallpaper.Default -> {
                             binding.wallpaperImageView.visibility = View.GONE
                         }
                         else -> {
