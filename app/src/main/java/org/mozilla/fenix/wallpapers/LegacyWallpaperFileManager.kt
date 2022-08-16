@@ -11,6 +11,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/**
+ * Utility for managing wallpaper files.
+ *
+ * @property rootDirectory The root directory that wallpapers are stored in.
+ * @param coroutineDispatcher The dispatcher that should be used to create [CoroutineScope]s. Likely
+ * only needs to specified under test.
+ */
 class LegacyWallpaperFileManager(
     private val rootDirectory: File,
     coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -28,10 +35,9 @@ class LegacyWallpaperFileManager(
         if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
             Wallpaper(
                 name = name,
-                collectionName = "",
-                availableLocales = null,
-                startDate = null,
-                endDate = null,
+                collection = Wallpaper.DefaultCollection,
+                textColor = null,
+                cardColor = null,
             )
         } else null
     }

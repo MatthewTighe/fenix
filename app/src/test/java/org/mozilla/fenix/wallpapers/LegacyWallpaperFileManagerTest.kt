@@ -96,9 +96,14 @@ class LegacyWallpaperFileManagerTest {
 
     private fun generateWallpaper(name: String) = Wallpaper(
         name = name,
-        collectionName = "",
-        availableLocales = null,
-        startDate = null,
-        endDate = null
+        textColor = null,
+        cardColor = null,
+        collection = Wallpaper.Collection(
+            name = Wallpaper.defaultName,
+            availableLocales = null,
+            startDate = null,
+            endDate = null,
+            learnMoreUrl = null
+        ),
     )
 }
