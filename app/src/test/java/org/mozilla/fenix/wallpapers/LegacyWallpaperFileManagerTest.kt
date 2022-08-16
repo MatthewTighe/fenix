@@ -14,7 +14,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-class WallpaperFileManagerTest {
+class LegacyWallpaperFileManagerTest {
     @Rule
     @JvmField
     val tempFolder = TemporaryFolder()
@@ -25,7 +25,7 @@ class WallpaperFileManagerTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
 
-    private lateinit var fileManager: WallpaperFileManager
+    private lateinit var fileManager: LegacyWallpaperFileManager
 
     @Before
     fun setup() {
@@ -33,7 +33,7 @@ class WallpaperFileManagerTest {
         portraitDarkFolder = tempFolder.newFolder("wallpapers", "portrait", "dark")
         landscapeLightFolder = tempFolder.newFolder("wallpapers", "landscape", "light")
         landscapeDarkFolder = tempFolder.newFolder("wallpapers", "landscape", "dark")
-        fileManager = WallpaperFileManager(
+        fileManager = LegacyWallpaperFileManager(
             rootDirectory = tempFolder.root,
             coroutineDispatcher = dispatcher,
         )

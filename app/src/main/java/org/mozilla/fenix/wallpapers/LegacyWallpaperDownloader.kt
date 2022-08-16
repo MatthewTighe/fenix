@@ -20,7 +20,7 @@ import java.io.File
  * @param context Required for writing files to local storage.
  * @param client Required for fetching files from network.
  */
-class WallpaperDownloader(
+class LegacyWallpaperDownloader(
     private val context: Context,
     private val client: Client,
 ) {
