@@ -4,8 +4,9 @@
 
 package org.mozilla.fenix.wallpapers
 
+import androidx.compose.ui.text.capitalize
 import org.mozilla.fenix.utils.Settings
-import java.util.Date
+import java.util.*
 
 /**
  * Type that represents wallpapers.
@@ -151,3 +152,5 @@ data class Wallpaper(
         }
     }
 }
+
+

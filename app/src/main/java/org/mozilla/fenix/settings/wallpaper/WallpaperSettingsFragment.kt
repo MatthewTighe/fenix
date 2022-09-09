@@ -1,7 +1,3 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package org.mozilla.fenix.settings.wallpaper
 
 import android.os.Bundle
@@ -25,6 +21,8 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.groupByCollection
+import java.util.*
 
 class WallpaperSettingsFragment : Fragment() {
     private val appStore by lazy {
@@ -38,7 +36,7 @@ class WallpaperSettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View? {
         Wallpapers.wallpaperSettingsOpened.record(NoExtras())
         return ComposeView(requireContext()).apply {
@@ -52,19 +50,18 @@ class WallpaperSettingsFragment : Fragment() {
                         state.wallpaperState.currentWallpaper
                     }.value ?: Wallpaper.Default
 
-                    var coroutineScope = rememberCoroutineScope()
+                    val coroutineScope = rememberCoroutineScope()
 
                     WallpaperSettings(
-                        onLearnMoreClick = {
+                        onLearnMoreClick = { url ->
                             (activity as HomeActivity).openToBrowserAndLoad(
-                                searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                                    SupportUtils.SumoTopic.WALLPAPER_LEARN_MORE,
-                                ),
+                                searchTermOrURL = url,
                                 newTab = true,
                                 from = BrowserDirection.FromWallpaper,
                             )
                         },
-                        wallpapers = wallpapers,
+
+                        wallpaperGroups = wallpapers.groupByCollection(),
                         defaultWallpaper = Wallpaper.Default,
                         selectedWallpaper = currentWallpaper,
                         loadWallpaperResource = {
@@ -73,7 +70,6 @@ class WallpaperSettingsFragment : Fragment() {
                         onSelectWallpaper = {
                             coroutineScope.launch { wallpaperUseCases.selectWallpaper(it) }
                         },
-                        onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
                     )
                 }
             }
@@ -84,3 +80,5 @@ class WallpaperSettingsFragment : Fragment() {
         showToolbar(getString(R.string.customize_wallpapers))
     }
 }
+
+

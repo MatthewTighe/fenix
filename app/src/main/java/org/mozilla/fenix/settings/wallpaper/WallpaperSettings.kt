@@ -56,6 +56,7 @@ import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.getDisplayName
 import java.util.UUID
 import kotlin.collections.HashMap
 
@@ -74,48 +75,15 @@ import kotlin.collections.HashMap
 @Composable
 @Suppress("LongParameterList")
 fun WallpaperSettings(
-    onLearnMoreClick: () -> Unit,
-    wallpapers: List<Wallpaper>,
+    onLearnMoreClick: (String) -> Unit,
+    wallpaperGroups: Map<Wallpaper.Collection, List<Wallpaper>>,
     defaultWallpaper: Wallpaper,
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     onSelectWallpaper: (Wallpaper) -> Unit,
-    onViewWallpaper: () -> Unit,
 ) {
-    val wallpapersMap = remember(wallpapers) {
-        wallpapers
-            .groupBy { it.collection.name }
-    }
-    val mutableGroup = wallpapersMap.toMutableMap()
-    val defaultWallpapers = wallpapersMap["default"]?.toMutableList()
-    val classicWallpapers =
-        wallpapersMap["classic-firefox"]?.toMutableList() ?: emptyList<Wallpaper>()
-
-    defaultWallpapers?.addAll(classicWallpapers)
-    mutableGroup["default"] = defaultWallpapers ?: emptyList<Wallpaper>()
-    mutableGroup.remove("classic-firefox")
-
-    val groups = mutableGroup.map {
-        WallpaperProviderGroup(
-            wallpapers = it.value,
-            title = it.key,
-        )
-    }.sortedBy { it.title == "default" }
-
-    val maps = HashMap<WallpaperProviderGroup, List<Wallpaper>>()
-    val scaffoldState = rememberScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
-    groups.forEach {
-        maps[it] = it.wallpapers
-    }
     Scaffold(
         backgroundColor = FirefoxTheme.colors.layer1,
-        scaffoldState = scaffoldState,
-        snackbarHost = { hostState ->
-            SnackbarHost(hostState = hostState) {
-                WallpaperSnackbar(onViewWallpaper)
-            }
-        },
     ) {
         Column(
             modifier = Modifier
@@ -123,46 +91,31 @@ fun WallpaperSettings(
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState()),
         ) {
-            WallpaperThumbnails(
-                onLearnMoreClick = onLearnMoreClick,
-                wallpapers = maps,
-                defaultWallpaper = defaultWallpaper,
-                loadWallpaperResource = loadWallpaperResource,
-                selectedWallpaper = selectedWallpaper,
-                onSelectWallpaper = { updatedWallpaper ->
-                    coroutineScope.launch {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            message = "", // overwritten by WallpaperSnackbar
-                            duration = SnackbarDuration.Short,
-                        )
-                    }
-                    onSelectWallpaper(updatedWallpaper)
-                },
-            )
+            wallpaperGroups.forEach { (collection, wallpapers) ->
+                if (wallpapers.isNotEmpty()) {
+                    WallpaperGroupHeading(
+                        onLearnMoreClick,
+                        collection
+                    )
+                    WallpaperThumbnails(
+                        wallpapers = wallpapers,
+                        defaultWallpaper = defaultWallpaper,
+                        loadWallpaperResource = loadWallpaperResource,
+                        selectedWallpaper = selectedWallpaper,
+                        onSelectWallpaper = { updatedWallpaper ->
+                            onSelectWallpaper(updatedWallpaper)
+                        },
+                    )
+                }
+            }
         }
     }
 }
 
-/**
- * A group of [Wallpaper]s.
- *
- * @property wallpapers The list of [Wallpaper]s in this group.
- * @property title An optional title for this group.
- * @property limit The maximum number of wallpapers that will be shown in this group.
- * @property id A unique ID for this group (uses a generated UUID by default)
- */
-
-data class WallpaperProviderGroup(
-    var wallpapers: List<Wallpaper>,
-    var title: String? = null,
-    val limit: Int = Integer.MAX_VALUE,
-    val id: String = UUID.randomUUID().toString(),
-)
-
 @Composable
-private fun WallpaperGroups(
-    title: String?,
-    onLearnMoreClick: () -> Unit?,
+private fun WallpaperGroupHeading(
+    onLearnMoreClick: (String) -> Unit,
+    collection: Wallpaper.Collection
 ) {
     Column(
         modifier = Modifier.padding(
@@ -172,33 +125,33 @@ private fun WallpaperGroups(
             bottom = 12.dp,
         ),
     ) {
-        if (title != "default" && title != "classic-firefox") {
+        if (collection.name != "classic-firefox") {
             Text(
-                text = "Limited edition",
+                text = collection.heading ?: "Limited edition",
                 modifier = Modifier.padding(bottom = 2.dp),
                 color = FirefoxTheme.colors.textSecondary,
                 fontSize = 14.sp,
             )
 
-            title.let {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    if (it != null) {
-                        Text(
-                            text = "$it. ",
-                            textAlign = TextAlign.Start,
-                            color = FirefoxTheme.colors.textSecondary,
-                            fontSize = 12.sp,
-                        )
-                        Text(
-                            text = stringResource(R.string.wallpaper_learn_more),
-                            color = FirefoxTheme.colors.textSecondary,
-                            modifier = Modifier.clickable { onLearnMoreClick() },
-                            fontSize = 12.sp,
-                            style = FirefoxTheme.typography.body2.copy(
-                                textDecoration = TextDecoration.Underline,
-                            ),
-                        )
-                    }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                collection.description?.let {
+                    Text(
+                        text = "$it. ",
+                        textAlign = TextAlign.Start,
+                        color = FirefoxTheme.colors.textSecondary,
+                        fontSize = 12.sp,
+                    )
+                }
+                collection.learnMoreUrl?.let {
+                    Text(
+                        text = stringResource(R.string.wallpaper_learn_more),
+                        color = FirefoxTheme.colors.textSecondary,
+                        modifier = Modifier.clickable { onLearnMoreClick(collection.learnMoreUrl) },
+                        fontSize = 12.sp,
+                        style = FirefoxTheme.typography.body2.copy(
+                            textDecoration = TextDecoration.Underline,
+                        ),
+                    )
                 }
             }
         } else {
@@ -209,37 +162,6 @@ private fun WallpaperGroups(
             )
         }
     }
-}
-
-@Composable
-private fun WallpaperSnackbar(
-    onViewWallpaper: () -> Unit,
-) {
-    Snackbar(
-        modifier = Modifier
-            .padding(8.dp)
-            .heightIn(min = 48.dp),
-        backgroundColor = FirefoxTheme.colors.actionPrimary,
-        content = {
-            Text(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-                text = stringResource(R.string.wallpaper_updated_snackbar_message),
-                textAlign = TextAlign.Start,
-                color = FirefoxTheme.colors.textOnColorPrimary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-                style = FirefoxTheme.typography.headline7,
-            )
-        },
-        action = {
-            TextButton(
-                text = stringResource(R.string.wallpaper_updated_snackbar_action),
-                onClick = onViewWallpaper,
-                modifier = Modifier.padding(all = 8.dp),
-                textColor = FirefoxTheme.colors.textOnColorPrimary,
-            )
-        },
-    )
 }
 
 /**
@@ -256,44 +178,35 @@ private fun WallpaperSnackbar(
 @Composable
 @Suppress("LongParameterList")
 private fun WallpaperThumbnails(
-    onLearnMoreClick: () -> Unit,
-    wallpapers: Map<WallpaperProviderGroup, List<Wallpaper>>,
+    wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     numColumns: Int = 3,
     onSelectWallpaper: (Wallpaper) -> Unit,
 ) {
-    wallpapers.forEach { (group, wallpapers) ->
-        if (wallpapers.isNotEmpty()) {
-            WallpaperGroups(
-                title = group.title,
-                onLearnMoreClick = onLearnMoreClick,
-            )
-        }
-        Column(modifier = Modifier.padding(horizontal = 18.dp)) {
-            val numRows = (wallpapers.size + numColumns - 1) / numColumns
-            for (rowIndex in 0 until numRows) {
-                Row {
-                    for (columnIndex in 0 until numColumns) {
-                        val itemIndex = rowIndex * numColumns + columnIndex
-                        if (itemIndex < wallpapers.size) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f, fill = true)
-                                    .padding(4.dp),
-                            ) {
-                                WallpaperThumbnailItem(
-                                    wallpaper = wallpapers[itemIndex],
-                                    defaultWallpaper = defaultWallpaper,
-                                    loadWallpaperResource = loadWallpaperResource,
-                                    isSelected = selectedWallpaper == wallpapers[itemIndex],
-                                    onSelect = onSelectWallpaper,
-                                )
-                            }
-                        } else {
-                            Spacer(Modifier.weight(1f))
+    Column(modifier = Modifier.padding(horizontal = 18.dp)) {
+        val numRows = (wallpapers.size + numColumns - 1) / numColumns
+        for (rowIndex in 0 until numRows) {
+            Row {
+                for (columnIndex in 0 until numColumns) {
+                    val itemIndex = rowIndex * numColumns + columnIndex
+                    if (itemIndex < wallpapers.size) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f, fill = true)
+                                .padding(4.dp),
+                        ) {
+                            WallpaperThumbnailItem(
+                                wallpaper = wallpapers[itemIndex],
+                                defaultWallpaper = defaultWallpaper,
+                                loadWallpaperResource = loadWallpaperResource,
+                                isSelected = selectedWallpaper == wallpapers[itemIndex],
+                                onSelect = onSelectWallpaper,
+                            )
                         }
+                    } else {
+                        Spacer(Modifier.weight(1f))
                     }
                 }
             }
@@ -368,20 +281,9 @@ private fun WallpaperThumbnailsPreview() {
             onLearnMoreClick = {},
             defaultWallpaper = Wallpaper.Default,
             loadWallpaperResource = { null },
-            wallpapers = listOf(Wallpaper.Default),
+            wallpaperGroups = mapOf(Wallpaper.DefaultCollection to listOf(Wallpaper.Default)),
             selectedWallpaper = Wallpaper.Default,
             onSelectWallpaper = {},
-            onViewWallpaper = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun WallpaperSnackbarPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
-        WallpaperSnackbar(
-            onViewWallpaper = {},
         )
     }
 }
