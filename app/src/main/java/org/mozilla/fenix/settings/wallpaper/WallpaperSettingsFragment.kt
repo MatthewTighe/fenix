@@ -16,10 +16,13 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Wallpapers
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
 
@@ -52,6 +55,15 @@ class WallpaperSettingsFragment : Fragment() {
                     var coroutineScope = rememberCoroutineScope()
 
                     WallpaperSettings(
+                        onLearnMoreClick = {
+                            (activity as HomeActivity).openToBrowserAndLoad(
+                                searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                                    SupportUtils.SumoTopic.WALLPAPER_LEARN_MORE,
+                                ),
+                                newTab = true,
+                                from = BrowserDirection.FromWallpaper,
+                            )
+                        },
                         wallpapers = wallpapers,
                         defaultWallpaper = Wallpaper.Default,
                         selectedWallpaper = currentWallpaper,

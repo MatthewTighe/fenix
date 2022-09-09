@@ -54,6 +54,7 @@ object SupportUtils {
         SMARTBLOCK("smartblock-enhanced-tracking-protection"),
         SPONSOR_PRIVACY("sponsor-privacy"),
         HTTPS_ONLY_MODE("https-only-mode-firefox-android"),
+        WALLPAPER_LEARN_MORE("enhanced-tracking-protection-android"),
     }
 
     enum class MozillaPage(internal val path: String) {
