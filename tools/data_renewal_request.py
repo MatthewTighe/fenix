@@ -14,11 +14,24 @@ import yaml
 
 from yaml.loader import FullLoader
 
+
+class MyDumper(yaml.Dumper):
+
+    def increase_indent(self, flow=False, indentless=False):
+        return super(MyDumper, self).increase_indent(flow, False)
+
 # This will preserve multiline strings from the original yaml document
 def str_presenter(dumper, data):
-  if len(data.splitlines()) > 1:  # check for multiline string
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-  return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    desc_indent_len = 4
+    # skip data review strings
+    # if ("https://github" in data):
+    #   return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    if '\n' in data:  # check for multiline string
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    # elif len(data) > 80 - desc_indent_len - len("description"):
+    #     # updated_data = f'\n{data}'
+    #     return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 yaml.add_representer(str, str_presenter)
 
@@ -65,4 +78,11 @@ header += "### Renew for 1 year\n"
 header += f'Total: {total_count}\n'
 header += "———\n\n"
 
-print(yaml.dump(yaml_file, default_flow_style=False, sort_keys=False))
+# yaml.dump(yaml_file, default_flow_style=False, sort_keys=False)
+with open("new_metrics.yaml", 'w+') as outfile:
+    outfile.write("""# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+    """)
+    yaml.dump(yaml_file, Dumper=MyDumper, stream=outfile, sort_keys=False)
