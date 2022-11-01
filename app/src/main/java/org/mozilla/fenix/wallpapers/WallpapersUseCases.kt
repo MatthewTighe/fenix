@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,12 +56,17 @@ class WallpapersUseCases(
             )
             DefaultInitializeWallpaperUseCase(
                 appStore = appStore,
-                downloader = downloader,
+//                downloader = downloader,
                 fileManager = fileManager,
                 metadataFetcher = metadataFetcher,
                 migrationHelper = migrationHelper,
                 settings = context.settings(),
                 currentLocale = currentLocale,
+                RemoteSettingsClient(
+                    client,
+                    bucketName = "colorways",
+                    collectionName = "colorways"
+                )
             )
         } else {
             val fileManager = LegacyWallpaperFileManager(storageRootDirectory)
@@ -90,7 +96,13 @@ class WallpapersUseCases(
     }
     val selectWallpaper: SelectWallpaperUseCase by lazy {
         if (FeatureFlags.wallpaperV2Enabled) {
-            DefaultSelectWallpaperUseCase(context.settings(), appStore, fileManager, downloader)
+            DefaultSelectWallpaperUseCase(
+                context.settings(), appStore, fileManager, downloader,
+                RemoteSettingsClient(
+                    httpClient = client,
+                    bucketName = "colorways-assets",
+                )
+            )
         } else {
             LegacySelectWallpaperUseCase(context.settings(), appStore)
         }
@@ -238,12 +250,13 @@ class WallpapersUseCases(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultInitializeWallpaperUseCase(
         private val appStore: AppStore,
-        private val downloader: WallpaperDownloader,
+//        private val downloader: WallpaperDownloader,
         private val fileManager: WallpaperFileManager,
         private val metadataFetcher: WallpaperMetadataFetcher,
         private val migrationHelper: LegacyWallpaperMigration,
         private val settings: Settings,
         private val currentLocale: String,
+        private val rsClient: RemoteSettingsClient,
     ) : InitializeWallpapersUseCase {
         override suspend fun invoke() {
             Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
@@ -261,6 +274,8 @@ class WallpapersUseCases(
             val possibleWallpapers = metadataFetcher.downloadWallpaperList().filter {
                 !it.isExpired() && it.isAvailableInLocale()
             }
+            val rsWallpapers = WallpaperJsonParser().parseAsWallpapers(rsClient.get())
+            Log.i("tighe", rsWallpapers.toString())
             val currentWallpaper = possibleWallpapers.find { it.name == currentWallpaperName }
                 ?: fileManager.lookupExpiredWallpaper(settings)
                 ?: Wallpaper.Default
@@ -274,9 +289,16 @@ class WallpapersUseCases(
                 possibleWallpapers,
             )
 
-            val wallpapersWithUpdatedThumbnailState = possibleWallpapers.map { wallpaper ->
-                val result = downloader.downloadThumbnail(wallpaper)
-                wallpaper.copy(thumbnailFileState = result)
+            rsClient.collectionName = "assets"
+            rsClient.bucketName = "colorways-assets"
+            val wallpapersWithUpdatedThumbnailState = rsWallpapers.map { wallpaper ->
+//                val result = downloader.downloadThumbnail(wallpaper)
+                val rsDownloader = RemoteSettingsDownloader(
+                    rsClient,
+                    rsClient.httpClient,
+                    fileManager.storageRootDirectory
+                )
+                wallpaper.copy(thumbnailFileState = rsDownloader.download(wallpaper, Wallpaper.ImageType.Thumbnail))
             }
 
             val defaultIncluded = listOf(Wallpaper.Default) + wallpapersWithUpdatedThumbnailState
@@ -468,6 +490,7 @@ class WallpapersUseCases(
         private val appStore: AppStore,
         private val fileManager: WallpaperFileManager,
         private val downloader: WallpaperDownloader,
+        private val rsClient: RemoteSettingsClient,
     ) : SelectWallpaperUseCase {
         /**
          * Select a new wallpaper. Storage and the app store will be updated appropriately.
@@ -482,6 +505,11 @@ class WallpapersUseCases(
             } else {
                 dispatchDownloadState(wallpaper, Wallpaper.ImageFileState.Downloading)
                 val result = downloader.downloadWallpaper(wallpaper)
+                val rsResult = rsClient.apply {
+                    collectionName = "assets"
+                    get()
+                }
+                print(rsResult)
                 dispatchDownloadState(wallpaper, result)
                 if (result == Wallpaper.ImageFileState.Downloaded) {
                     selectWallpaper(wallpaper)

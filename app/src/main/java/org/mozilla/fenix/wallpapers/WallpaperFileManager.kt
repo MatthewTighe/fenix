@@ -21,7 +21,7 @@ import java.io.File
  * should be likely be used except for when under test.
  */
 class WallpaperFileManager(
-    private val storageRootDirectory: File,
+    val storageRootDirectory: File,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val wallpapersDirectory = File(storageRootDirectory, "wallpapers")
